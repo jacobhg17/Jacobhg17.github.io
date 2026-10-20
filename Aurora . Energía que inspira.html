@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Aurora — Energía que inspira</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root{
+    --nav-bg:rgba(255,255,255,0.72);
+    --card-bg:rgba(255,255,255,0.14);
+    --card-border:rgba(255,255,255,0.28);
+    --dot:rgba(255,255,255,0.4);
+    --dot-active:#ffffff;
+    color-scheme: light;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --nav-bg:rgba(18,18,28,0.68); color-scheme: dark; }
+  }
+  :root[data-theme="dark"]{ --nav-bg:rgba(18,18,28,0.68); color-scheme: dark; }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{height:100%; scroll-padding-top:env(safe-area-inset-top,0px);}
+  html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  body{position:relative;background:#120f1e;}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:101;background:var(--nav-bg);backdrop-filter:blur(14px);}
+
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+    padding:calc(12px + env(safe-area-inset-top,0px)) clamp(14px,4vw,32px) 12px;background:var(--nav-bg);backdrop-filter:blur(14px);
+    border-bottom:1px solid rgba(255,255,255,0.1);}
+  .logo{font-weight:800;letter-spacing:3px;font-size:clamp(15px,2.2vw,19px);color:#fff;}
+  .nav-btns{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;}
+  .nav-btns button{border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.08);color:#fff;padding:7px 13px;border-radius:999px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .25s ease;}
+  .nav-btns button:hover{background:rgba(255,255,255,0.22);transform:translateY(-1px);}
+  .nav-btns button.active{background:#fff;color:#1a1a2e;}
+
+  #viewport{position:relative;width:100%;height:100%;}
+  .screen{position:absolute;inset:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+    padding:calc(90px + env(safe-area-inset-top,0px)) clamp(18px,6vw,60px) calc(70px + env(safe-area-inset-bottom,0px));
+    transition:transform .65s cubic-bezier(.65,0,.35,1), opacity .65s ease;overflow-y:auto;}
+  .screen:not(.active){transform:translateX(100%);opacity:0;pointer-events:none;}
+  .screen.active{transform:translateX(0);opacity:1;z-index:2;}
+
+  .content{position:relative;z-index:2;max-width:1000px;width:100%;color:#fff;text-align:center;margin:0 auto;}
+  .eyebrow{font-size:12.5px;letter-spacing:4px;font-weight:700;opacity:.8;text-transform:uppercase;margin-bottom:14px;}
+  h1{font-size:clamp(32px,6.5vw,64px);font-weight:800;line-height:1.08;margin-bottom:16px;}
+  h2{font-size:clamp(24px,4vw,38px);font-weight:800;margin-bottom:14px;}
+  p.lead{font-size:clamp(14px,1.6vw,18px);opacity:.92;line-height:1.6;max-width:640px;margin:0 auto 26px;}
+  .btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+  .cta{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#1a1a2e;border:none;padding:14px 26px;border-radius:999px;font-size:14.5px;font-weight:700;cursor:pointer;transition:transform .25s ease, box-shadow .25s ease;box-shadow:0 10px 30px rgba(0,0,0,.25);font-family:inherit;}
+  .cta:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 14px 36px rgba(0,0,0,.35);}
+  .cta.ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.6);box-shadow:none;}
+  .cta.ghost:hover{background:rgba(255,255,255,.12);}
+  .cta.wa{background:#25D366;color:#0b1a12;}
+
+  .blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5;z-index:0;animation:float 9s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0) translateX(0);}50%{transform:translateY(-25px) translateX(15px);}}
+
+  .screen-0{background:linear-gradient(135deg,#0f0c29,#302b63 45%,#24243e);}
+  .screen-0 .blob:nth-child(1){width:420px;height:420px;background:#7c3aed;top:-80px;left:-100px;}
+  .screen-0 .blob:nth-child(2){width:360px;height:360px;background:#06b6d4;bottom:-100px;right:-80px;animation-delay:2s;}
+  .screen-0 .blob:nth-child(3){width:260px;height:260px;background:#f472b6;top:40%;left:60%;animation-delay:4s;}
+  .stats{display:flex;gap:30px;justify-content:center;flex-wrap:wrap;margin-top:10px;}
+  .stats div{text-align:center;}
+  .stats b{display:block;font-size:clamp(24px,3vw,34px);}
+  .stats span{font-size:12.5px;opacity:.8;}
+
+  .screen-1{background:linear-gradient(135deg,#0c2d48,#145369 55%,#0c2d48);}
+  .screen-1 .blob:nth-child(1){width:380px;height:380px;background:#22d3ee;top:-100px;right:-80px;}
+  .screen-1 .blob:nth-child(2){width:300px;height:300px;background:#14b8a6;bottom:-80px;left:-60px;animation-delay:3s;}
+  .about-grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:36px;align-items:center;text-align:left;}
+  .about-grid p.lead{margin:0 0 18px;}
+  @media (max-width:760px){.about-grid{grid-template-columns:1fr;text-align:center;}.about-grid p.lead{margin:0 auto 18px;}.stats{margin-top:18px;}}
+
+  .screen-2{background:linear-gradient(135deg,#052e24,#0a6c54 55%,#052e24);}
+  .screen-2 .blob:nth-child(1){width:340px;height:340px;background:#34d399;top:-90px;left:30%;}
+  .cards{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;margin-bottom:26px;}
+  .card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:20px;padding:22px 20px;width:230px;backdrop-filter:blur(8px);transition:transform .25s ease, background .25s ease;text-align:left;}
+  .card:hover{transform:translateY(-6px);background:rgba(255,255,255,0.22);}
+  .card svg{width:38px;height:38px;margin-bottom:12px;}
+  .card h3{font-size:16.5px;margin-bottom:8px;}
+  .card p{font-size:13px;opacity:.85;line-height:1.5;margin-bottom:10px;}
+  .more-btn{background:none;border:none;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;opacity:.85;padding:0;text-decoration:underline;font-family:inherit;}
+  .acc-body{max-height:0;overflow:hidden;transition:max-height .35s ease;font-size:12.5px;opacity:.85;line-height:1.5;}
+  .card.open .acc-body{max-height:160px;margin-top:8px;}
+
+  .screen-3{background:linear-gradient(135deg,#1e1b4b,#4c1d95 55%,#1e1b4b);}
+  .screen-3 .blob:nth-child(1){width:360px;height:360px;background:#a78bfa;top:-90px;right:-60px;}
+  .screen-3 .blob:nth-child(2){width:280px;height:280px;background:#f472b6;bottom:-70px;left:-50px;animation-delay:3.5s;}
+  .proj-list{display:flex;flex-direction:column;gap:12px;max-width:720px;margin:0 auto 22px;text-align:left;}
+  .acc-item{background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:16px 20px;backdrop-filter:blur(8px);}
+  .acc-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:12px;}
+  .acc-header h4{font-size:15px;}
+  .acc-header span.tag{font-size:11.5px;opacity:.75;font-weight:600;}
+  .acc-header .chevron{transition:transform .3s ease;flex-shrink:0;}
+  .acc-item.open .chevron{transform:rotate(180deg);}
+  .acc-item.open .acc-body{max-height:200px;margin-top:10px;}
+
+  .screen-4{background:linear-gradient(135deg,#1a2e1a,#2d5a3d 55%,#1a2e1a);}
+  .screen-4 .blob:nth-child(1){width:360px;height:360px;background:#4ade80;bottom:-100px;right:-60px;}
+  .bill-toggle{display:inline-flex;gap:4px;background:rgba(255,255,255,.12);padding:4px;border-radius:999px;margin-bottom:26px;}
+  .bill-toggle button{border:none;background:none;color:#fff;padding:8px 18px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer;opacity:.75;font-family:inherit;}
+  .bill-toggle button.active{background:#fff;color:#1a1a2e;opacity:1;}
+  .plans{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;}
+  .plan{background:var(--card-bg);border:1px solid var(--card-border);border-radius:20px;padding:24px 20px;width:220px;backdrop-filter:blur(8px);text-align:left;}
+  .plan.featured{border-color:#fff;background:rgba(255,255,255,0.22);transform:scale(1.03);}
+  .plan h3{font-size:15px;margin-bottom:6px;}
+  .price{font-size:26px;font-weight:800;display:block;margin-bottom:10px;}
+  .plan ul{list-style:none;font-size:12.5px;opacity:.9;line-height:2;margin-bottom:16px;}
+  .plan .cta{width:100%;justify-content:center;padding:10px;font-size:13px;}
+
+  .screen-5{background:linear-gradient(135deg,#2d1b1b,#5a2d2d 55%,#2d1b1b);}
+  .screen-5 .blob:nth-child(1){width:340px;height:340px;background:#fb7185;top:-80px;left:20%;}
+  .faq-list{display:flex;flex-direction:column;gap:10px;max-width:680px;margin:0 auto;text-align:left;}
+
+  .screen-6{background:linear-gradient(135deg,#4a1942,#8a3b5a 50%,#c2673b);}
+  .screen-6 .blob:nth-child(1){width:380px;height:380px;background:#fb923c;bottom:-100px;right:-60px;}
+  .screen-6 .blob:nth-child(2){width:260px;height:260px;background:#ec4899;top:-60px;left:-40px;animation-delay:2.5s;}
+  .quick-contact{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:26px;}
+  .quick-contact a{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.4);padding:10px 16px;border-radius:999px;color:#fff;text-decoration:none;font-size:13px;font-weight:600;transition:background .25s ease;}
+  .quick-contact a:hover{background:rgba(255,255,255,.18);}
+  .quick-contact svg{width:16px;height:16px;}
+  .form{max-width:440px;margin:0 auto;text-align:left;display:flex;flex-direction:column;gap:12px;}
+  .form input,.form textarea{width:100%;border-radius:12px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);color:#fff;padding:12px 14px;font-size:14px;font-family:inherit;}
+  .form input::placeholder,.form textarea::placeholder{color:rgba(255,255,255,.7);}
+  .form textarea{resize:none;height:72px;}
+  .form .btn-row{margin-top:4px;}
+  .hint{font-size:11.5px;opacity:.75;text-align:center;margin-top:10px;}
+
+  .dots{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:3;}
+  .dots span{width:7px;height:7px;border-radius:50%;background:var(--dot);transition:all .3s ease;cursor:pointer;}
+  .dots span.active{background:var(--dot-active);width:20px;border-radius:5px;}
+
+  .nav-arrow{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.4);background:rgba(0,0,0,.25);backdrop-filter:blur(6px);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .25s ease, opacity .25s ease;}
+  .nav-arrow:hover{background:rgba(255,255,255,.25);}
+  .nav-arrow:disabled{opacity:.25;cursor:default;}
+  #prevArrow{left:14px;}
+  #nextArrow{right:72px;}
+
+  .fab-wa{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));right:14px;z-index:50;width:38px;height:38px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.35);text-decoration:none;}
+  .fab-wa svg{width:19px;height:19px;fill:#fff;}
+
+  @media (max-width:560px){ .nav-btns button{padding:6px 10px;font-size:11.5px;} .logo{font-size:14px;} #nextArrow{right:60px;} }
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">AURORA</div>
+  <div class="nav-btns">
+    <button data-target="0" class="active">Inicio</button>
+    <button data-target="1">Nosotros</button>
+    <button data-target="2">Servicios</button>
+    <button data-target="3">Proyectos</button>
+    <button data-target="4">Planes</button>
+    <button data-target="5">FAQ</button>
+    <button data-target="6">Contacto</button>
+  </div>
+</nav>
+
+<main id="viewport">
+
+  <section class="screen screen-0 active" id="s0">
+    <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+    <div class="content">
+      <div class="eyebrow">Energía renovable · desde 2026</div>
+      <h1>Iluminamos el futuro<br>con energía limpia</h1>
+      <p class="lead">En Aurora diseñamos soluciones de energía solar, eólica y almacenamiento para hogares y empresas que quieren avanzar hacia un mañana sostenible.</p>
+      <div class="btn-row">
+        <button class="cta" data-target="2">Ver servicios →</button>
+        <button class="cta ghost" data-target="3">Nuestros proyectos</button>
+      </div>
+      <div class="stats">
+        <div><b>300+</b><span>comunidades</span></div>
+        <div><b>45 MW</b><span>instalados</span></div>
+        <div><b>9</b><span>años de experiencia</span></div>
+      </div>
+    </div>
+    <div class="dots"></div>
+  </section>
+
+  <section class="screen screen-1" id="s1">
+    <div class="blob"></div><div class="blob"></div>
+    <div class="content about-grid">
+      <div>
+        <div class="eyebrow">Sobre nosotros</div>
+        <h2>Una idea simple:<br>energía que respeta el planeta</h2>
+        <p class="lead">Nacimos de un equipo de ingenieros e ingenieras convencidos de que la transición energética debía ser accesible, bonita y fácil de entender. Hoy acompañamos a comunidades y empresas en su camino hacia la independencia energética, desde el diseño del proyecto hasta su mantenimiento.</p>
+        <div class="btn-row">
+          <button class="cta ghost" data-target="2">Qué hacemos →</button>
+          <button class="cta ghost" data-target="6">Habla con nosotros</button>
+        </div>
+      </div>
+      <div>
+        <svg viewBox="0 0 200 200" width="100%" style="max-width:300px;margin:0 auto;display:block;">
+          <circle cx="100" cy="100" r="70" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="2"/>
+          <circle cx="100" cy="100" r="46" fill="#fff" fill-opacity="0.12"/>
+          <path d="M100 40 L108 92 L160 100 L108 108 L100 160 L92 108 L40 100 L92 92 Z" fill="#fff" fill-opacity="0.8"/>
+        </svg>
+      </div>
+    </div>
+    <div class="dots"></div>
+  </section>
+
+  <section class="screen screen-2" id="s2">
+    <div class="blob"></div>
+    <div class="content">
+      <div class="eyebrow">Qué ofrecemos</div>
+      <h2>Soluciones para cada necesidad</h2>
+      <div class="cards">
+        <div class="card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+          <h3>Energía Solar</h3>
+          <p>Paneles de alto rendimiento para tejados residenciales e industriales.</p>
+          <button class="more-btn" onclick="this.closest('.card').classList.toggle('open')">Ver detalle</button>
+          <div class="acc-body">Estudio de sombras incluido, monitorización desde el móvil y garantía de producción de 25 años. Amortización media: 6-8 años.</div>
+        </div>
+        <div class="card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><path d="M3 10h9a3 3 0 1 0-2.6-4.5"/><path d="M3 14h13a3 3 0 1 1-2.6 4.5"/></svg>
+          <h3>Energía Eólica</h3>
+          <p>Microturbinas silenciosas para entornos urbanos y rurales.</p>
+          <button class="more-btn" onclick="this.closest('.card').classList.toggle('open')">Ver detalle</button>
+          <div class="acc-body">Funcionan con vientos desde 3 m/s, nivel de ruido inferior a 45 dB y mantenimiento anual incluido el primer año.</div>
+        </div>
+        <div class="card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><rect x="3" y="7" width="16" height="10" rx="2"/><rect x="21" y="10" width="2" height="4"/><rect x="6" y="9.5" width="7" height="5" fill="#fff" stroke="none"/></svg>
+          <h3>Almacenamiento</h3>
+          <p>Baterías inteligentes que guardan tu energía sobrante.</p>
+          <button class="more-btn" onclick="this.closest('.card').classList.toggle('open')">Ver detalle</button>
+          <div class="acc-body">Capacidades de 5 a 30 kWh, gestión automática por app y compatibilidad con cualquier instalación solar existente.</div>
+        </div>
+      </div>
+      <button class="cta" data-target="6">Pide presupuesto →</button>
+    </div>
+    <div class="dots"></div>
+  </section>
+
+  <section class="screen screen-3" id="s3">
+    <div class="blob"></div><div class="blob"></div>
+    <div class="content">
+      <div class="eyebrow">Casos de éxito</div>
+      <h2>Proyectos que ya brillan</h2>
+      <div class="proj-list">
+        <div class="acc-item">
+          <div class="acc-header" onclick="this.closest('.acc-item').classList.toggle('open')">
+            <h4>Comunidad Solar Vega Verde</h4>
+            <span class="tag">Residencial</span>
+            <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <div class="acc-body">120 viviendas unidas en una instalación solar comunitaria de 400 kW. Reducción media del 70% en la factura eléctrica de cada hogar.</div>
+        </div>
+        <div class="acc-item">
+          <div class="acc-header" onclick="this.closest('.acc-item').classList.toggle('open')">
+            <h4>Parque Eólico Sierra Alta</h4>
+            <span class="tag">Industrial</span>
+            <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <div class="acc-body">8 microturbinas que abastecen una planta logística, evitando la emisión de 310 toneladas de CO₂ al año.</div>
+        </div>
+        <div class="acc-item">
+          <div class="acc-header" onclick="this.closest('.acc-item').classList.toggle('open')">
+            <h4>Almacén Inteligente NorTech</h4>
+            <span class="tag">Empresas</span>
+            <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <div class="acc-body">Sistema de baterías de 120 kWh que permite operar fuera de horas punta, ahorrando un 35% en costes energéticos.</div>
+        </div>
+      </div>
+      <button class="cta" data-target="6">Quiero un proyecto así →</button>
+    </div>
+    <div class="dots"></div>
+  </section>
+
+  <section class="screen screen-4" id="s4">
+    <div class="blob"></div>
+    <div class="content">
+      <div class="eyebrow">Planes</div>
+      <h2>Elige tu ritmo de ahorro</h2>
+      <div class="bill-toggle">
+        <button data-mode="monthly" class="active" onclick="setBilling('monthly')">Mensual</button>
+        <button data-mode="annual" onclick="setBilling('annual')">Anual (-20%)</button>
+      </div>
+      <div class="plans">
+        <div class="plan">
+          <h3>Hogar</h3>
+          <span class="price" data-monthly="29€/mes" data-annual="23€/mes">29€/mes</span>
+          <ul><li>✓ Instalación solar básica</li><li>✓ App de monitorización</li><li>✓ Soporte por email</li></ul>
+          <button class="cta ghost" data-target="6">Elegir plan</button>
+        </div>
+        <div class="plan featured">
+          <h3>Negocio</h3>
+          <span class="price" data-monthly="79€/mes" data-annual="63€/mes">79€/mes</span>
+          <ul><li>✓ Solar + almacenamiento</li><li>✓ Mantenimiento incluido</li><li>✓ Soporte prioritario</li></ul>
+          <button class="cta" data-target="6">Elegir plan</button>
+        </div>
+        <div class="plan">
+          <h3>Empresas</h3>
+          <span class="price" data-monthly="A medida" data-annual="A medida">A medida</span>
+          <ul><li>✓ Proyecto a medida</li><li>✓ Gestor dedicado</li><li>✓ Informe de sostenibilidad</li></ul>
+          <button class="cta ghost" data-target="6">Hablar con ventas</button>
+        </div>
+      </div>
+    </div>
+    <div class="dots"></div>
+  </section>
+
+  <section class="screen screen-5" id="s5">
+    <div class="blob"></div>
+    <div class="content">
+      <div class="eyebrow">Dudas frecuentes</div>
+      <h2>Preguntas frecuentes</h2>
+      <div class="faq-list">
+        <div class="acc-item"><div class="acc-header" onclick="this.closest('.acc-item').classList.toggle('open')"><h4>¿Cuánto tarda una instalación solar?</h4><svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div><div class="acc-body">Entre 2 y 4 semanas desde la firma del proyecto, incluyendo permisos y puesta en marcha.</div></div>
+        <div class="acc-item"><div class="acc-header" onclick="this.closest('.acc-item').classList.toggle('open')"><h4>¿Necesito batería si ya tengo paneles?</h4><svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div><div class="acc-body">No es obligatorio, pero te permite aprovechar hasta un 40% más de la energía que generas.</div></div>
+        <div class="acc-item"><div class="acc-header" onclick="this.closest('.acc-item').classList.toggle('open')"><h4>¿Qué garantía tienen los equipos?</h4><svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div><div class="acc-body">25 años en paneles solares, 10 años en baterías y 5 años en inversores, con soporte técnico incluido.</div></div>
+        <div class="acc-item"><div class="acc-header" onclick="this.closest('.acc-item').classList.toggle('open')"><h4>¿Trabajáis fuera de España?</h4><svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div><div class="acc-body">Por ahora operamos en todo el territorio nacional, con planes de expansión a Portugal en 2027.</div></div>
+      </div>
+      <div class="btn-row" style="margin-top:22px;"><button class="cta" data-target="6">¿Más preguntas? Contáctanos →</button></div>
+    </div>
+    <div class="dots"></div>
+  </section>
+
+  <section class="screen screen-6" id="s6">
+    <div class="blob"></div><div class="blob"></div>
+    <div class="content">
+      <div class="eyebrow">Contacto</div>
+      <h2>Cuéntanos tu proyecto</h2>
+      <p class="lead">Escríbenos y te responderemos en menos de 48 horas. Puedes contactar directamente o usar el formulario.</p>
+      <div class="quick-contact">
+        <a href="https://wa.me/34642886698?text=Hola%20Aurora%2C%20me%20gustar%C3%ADa%20m%C3%A1s%20informaci%C3%B3n." target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15L2 22l5.2-1.4A10 10 0 1012 2zm5.8 14.3c-.3.7-1.4 1.3-2 1.4-.5.1-1.2.2-3.7-.8-3.1-1.2-5.1-4.4-5.3-4.6-.1-.2-1.3-1.7-1.3-3.2 0-1.5.8-2.3 1.1-2.6.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5.3.6.9 2.1 1 2.2.1.2.1.4 0 .6-.2.4-.3.5-.5.8-.2.2-.4.5-.1.9.3.5 1.2 1.9 2.5 3 1.7 1.5 3 1.9 3.5 2.1.4.2.6.1.8-.1.2-.3.9-1 1.1-1.4.2-.3.5-.3.8-.2.3.1 2 1 2.4 1.2.4.2.6.3.7.4.1.3.1.8-.2 1.5z"/></svg>WhatsApp</a>
+        <a href="mailto:jacobamadorhg@gmail.com?subject=Consulta%20desde%20la%20web%20Aurora"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>jacobamadorhg@gmail.com</a>
+        <a href="tel:+34642886698"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.4 2.1L8 9.9a16 16 0 006 6l1.4-1.3a2 2 0 012.1-.4c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg>+34 642 88 66 98</a>
+      </div>
+      <div class="form">
+        <input type="text" id="cName" placeholder="Tu nombre" required>
+        <input type="email" id="cEmail" placeholder="Tu correo electrónico">
+        <textarea id="cMsg" placeholder="Cuéntanos qué necesitas..." required></textarea>
+        <div class="btn-row">
+          <button type="button" class="cta wa" onclick="sendWhatsApp()">Enviar por WhatsApp</button>
+          <button type="button" class="cta ghost" onclick="sendEmail()">Enviar por Email</button>
+        </div>
+      </div>
+      <p class="hint">Al pulsar, se abrirá tu app de WhatsApp o tu correo con el mensaje ya redactado y dirigido a Aurora.</p>
+    </div>
+    <div class="dots"></div>
+  </section>
+
+</main>
+
+<button id="prevArrow" class="nav-arrow" aria-label="Anterior">‹</button>
+<button id="nextArrow" class="nav-arrow" aria-label="Siguiente">›</button>
+<a class="fab-wa" href="https://wa.me/34642886698?text=Hola%20Aurora%2C%20tengo%20una%20consulta." target="_blank" rel="noopener" aria-label="WhatsApp">
+  <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 00-8.6 15L2 22l5.2-1.4A10 10 0 1012 2zm5.8 14.3c-.3.7-1.4 1.3-2 1.4-.5.1-1.2.2-3.7-.8-3.1-1.2-5.1-4.4-5.3-4.6-.1-.2-1.3-1.7-1.3-3.2 0-1.5.8-2.3 1.1-2.6.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5.3.6.9 2.1 1 2.2.1.2.1.4 0 .6-.2.4-.3.5-.5.8-.2.2-.4.5-.1.9.3.5 1.2 1.9 2.5 3 1.7 1.5 3 1.9 3.5 2.1.4.2.6.1.8-.1.2-.3.9-1 1.1-1.4.2-.3.5-.3.8-.2.3.1 2 1 2.4 1.2.4.2.6.3.7.4.1.3.1.8-.2 1.5z"/></svg>
+</a>
+
+<script>
+  const screens = Array.from(document.querySelectorAll('.screen'));
+  const navBtns = document.querySelectorAll('.nav-btns button');
+  const dotsContainers = document.querySelectorAll('.dots');
+  let current = 0;
+
+  // build dot indicators for every screen
+  dotsContainers.forEach(container => {
+    screens.forEach((s,i) => {
+      const dot = document.createElement('span');
+      dot.dataset.target = i;
+      if(i===0) dot.classList.add('active');
+      dot.addEventListener('click', () => goTo(i));
+      container.appendChild(dot);
+    });
+  });
+
+  function syncIndicators(target){
+    navBtns.forEach(b => b.classList.toggle('active', +b.dataset.target === target));
+    document.querySelectorAll('.dots span').forEach(d => d.classList.toggle('active', +d.dataset.target === target));
+    document.getElementById('prevArrow').disabled = target === 0;
+    document.getElementById('nextArrow').disabled = target === screens.length - 1;
+  }
+
+  function goTo(target){
+    if(target === current || target < 0 || target > screens.length-1) return;
+    const dir = target > current ? 1 : -1;
+    const curEl = screens[current], tgtEl = screens[target];
+    tgtEl.style.transition = 'none';
+    tgtEl.style.transform = `translateX(${dir*100}%)`;
+    tgtEl.style.opacity = '0';
+    tgtEl.classList.add('active');
+    tgtEl.style.zIndex = 2; curEl.style.zIndex = 1;
+    tgtEl.offsetHeight;
+    tgtEl.style.transition = '';
+    requestAnimationFrame(() => {
+      curEl.style.transform = `translateX(${-dir*100}%)`; curEl.style.opacity = '0';
+      tgtEl.style.transform = 'translateX(0)'; tgtEl.style.opacity = '1';
+    });
+    setTimeout(() => curEl.classList.remove('active'), 650);
+    current = target;
+    syncIndicators(target);
+  }
+
+  document.querySelectorAll('[data-target]').forEach(el => {
+    if(el.tagName === 'SPAN') return; // dots handled above
+    el.addEventListener('click', () => goTo(+el.dataset.target));
+  });
+
+  document.getElementById('prevArrow').addEventListener('click', () => goTo(current-1));
+  document.getElementById('nextArrow').addEventListener('click', () => goTo(current+1));
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'ArrowRight') goTo(Math.min(current+1, screens.length-1));
+    if(e.key === 'ArrowLeft') goTo(Math.max(current-1, 0));
+  });
+  syncIndicators(0);
+
+  function setBilling(mode){
+    document.querySelectorAll('.price').forEach(el => { el.textContent = el.dataset[mode]; });
+    document.querySelectorAll('.bill-toggle button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  }
+
+  function sendWhatsApp(){
+    const n = document.getElementById('cName').value.trim();
+    const m = document.getElementById('cMsg').value.trim();
+    if(!n || !m){ alert('Por favor, escribe tu nombre y tu mensaje.'); return; }
+    const text = `Hola, soy ${n}. ${m}`;
+    window.open(`https://wa.me/34642886698?text=${encodeURIComponent(text)}`, '_blank');
+  }
+  function sendEmail(){
+    const n = document.getElementById('cName').value.trim();
+    const em = document.getElementById('cEmail').value.trim();
+    const m = document.getElementById('cMsg').value.trim();
+    if(!n || !m){ alert('Por favor, escribe tu nombre y tu mensaje.'); return; }
+    const body = `Nombre: ${n}\nEmail: ${em}\n\n${m}`;
+    window.location.href = `mailto:jacobamadorhg@gmail.com?subject=${encodeURIComponent('Consulta desde la web Aurora')}&body=${encodeURIComponent(body)}`;
+  }
+</script>
+</body>
+</html>
